@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fajr Alarm - Sit-Up Challenge</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #ffd700, #ff6b6b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      color: #a0a0a0;
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+    }
+    
+    .status-panel {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .counter {
+      font-size: 5rem;
+      font-weight: 700;
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255,215,0,0.5);
+      margin: 20px 0;
+    }
+    
+    .counter span {
+      font-size: 2rem;
+      color: #a0a0a0;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffd700, #ff6b6b);
+      border-radius: 10px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    
+    .video-container {
+      position: relative;
+      display: inline-block;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 20px 0;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    
+    #video {
+      display: block;
+      width: 100%;
+      max-width: 640px;
+      transform: scaleX(-1);
+    }
+    
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      max-width: 640px;
+      transform: scaleX(-1);
+    }
+    
+    .controls {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    
+    button {
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #ffd700, #ff6b6b);
+      color: #1a1a2e;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255,215,0,0.4);
+    }
+    
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #ff4757, #ff6b6b);
+      color: #fff;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255,71,87,0.4);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    .message {
+      font-size: 1.3rem;
+      margin: 20px 0;
+      min-height: 40px;
+    }
+    
+    .message.alarm {
+      color: #ff4757;
+      animation: pulse 0.5s infinite;
+    }
+    
+    .message.success {
+      color: #2ed573;
+    }
+    
+    .message.waiting {
+      color: #ffd700;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .instructions {
+      background: rgba(255,255,255,0.05);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    
+    .instructions h3 {
+      color: #ffd700;
+      margin-bottom: 15px;
+    }
+    
+    .instructions ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .instructions li {
+      padding: 8px 0;
+      padding-left: 25px;
+      position: relative;
+    }
+    
+    .instructions li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #ffd700;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .fajr-time {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 15px 30px;
+      border-radius: 50px;
+      display: inline-block;
+      margin: 10px 0;
+      font-size: 1.2rem;
+    }
+    
+    .time-remaining {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌅 Fajr Wake-Up Challenge</h1>
+    <p class="subtitle">Complete 10 sit-ups to silence the alarm</p>
+    
+    <div class="fajr-time">
+      Fajr in: <span id="timeRemaining" class="time-remaining">--:--</span>
+    </div>
+    
+    <div class="status-panel">
+      <div class="counter">
+        <span id="count">0</span> <span>/ 10 sit-ups</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+      </div>
+      <p class="message" id="message">Click "Start Alarm" to begin</p>
+    </div>
+    
+    <div class="video-container hidden" id="videoContainer">
+      <video id="video" playsinline></video>
+      <canvas id="canvas"></canvas>
+    </div>
+    
+    <div class="controls">
+      <button class="btn-primary" id="startBtn">Start Alarm</button>
+      <button class="btn-secondary hidden" id="stopBtn">Stop Alarm</button>
+      <button class="btn-danger hidden" id="resetBtn">Reset</button>
+    </div>
+    
+    <div class="instructions">
+      <h3>How it works:</h3>
+      <ul>
+        <li>Set your wake-up time (defaults to Fajr in your timezone)</li>
+        <li>When alarm triggers, camera will activate</li>
+        <li>Get into starting position - lie on your back</li>
+        <li>Do 10 sit-ups while the camera tracks you</li>
+        <li>Alarm stops when you complete all 10!</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  
+  <script>
+    // State
+    let alarmActive = false;
+    let sitUpCount = 0;
+    let alarmSound = null;
+    let pose = null;
+    let camera = null;
+    let lastAngle = null;
+    let inSitUp = false;
+    let sitUpComplete = false;
+    let frameCount = 0;
+    
+    // DOM elements
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const countEl = document.getElementById('count');
+    const progressEl = document.getElementById('progress');
+    const messageEl = document.getElementById('message');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const videoContainer = document.getElementById('videoContainer');
+    const timeRemainingEl = document.getElementById('timeRemaining');
+    
+    // Calculate Fajr time (approximate - 1.5 hours before sunrise)
+    function getFajrTime() {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(5, 0, 0, 0); // Default 5 AM
+      
+      // Simple approximation: Fajr is about 1.5 hours before sunrise
+      // For demo, we'll just set it to a fixed time
+      return tomorrow;
+    }
+    
+    function updateTimeRemaining() {
+      const now = new Date();
+      const fajr = getFajrTime();
+      
+      if (now > fajr) {
+        fajr.setDate(fajr.getDate() + 1);
+      }
+      
+      const diff = fajr - now;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      timeRemainingEl.textContent = 
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    setInterval(updateTimeRemaining, 1000);
+    updateTimeRemaining();
+    
+    // Audio alarm
+    function playAlarm() {
+      if (alarmSound) {
+        alarmSound.play().catch(e => console.log('Audio play failed:', e));
+        return;
+      }
+      
+      // Create alarm sound using Web Audio API
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      function playTone() {
+        if (!alarmActive) return;
+        
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.frequency.value = 880;
+        oscillator.type = 'square';
+        
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.5);
+        
+        setTimeout(playTone, 600);
+      }
+      
+      playTone();
+      alarmSound = { play: playTone };
+    }
+    
+    function stopAlarm() {
+      alarmActive = false;
+      if (alarmSound) {
+        alarmSound = null;
+      }
+    }
+    
+    // MediaPipe Pose
+    function initPose() {
+      pose = new Pose({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+        }
+      });
+      
+      pose.setOptions({
+        modelComplexity: 1,
+        smoothLandmarks: true,
+        enableSegmentation: false,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+      });
+      
+      pose.onResults(onPoseResults);
+    }
+    
+    function onPoseResults(results) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (results.poseLandmarks) {
+        // Draw pose landmarks
+        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, 
+          {color: '#ffd700', lineWidth: 3});
+        drawLandmarks(ctx, results.poseLandmarks,
+          {color: '#ff6b6b', lineWidth: 2, radius: 5});
+        
+        // Detect sit-up
+        detectSitUp(results.poseLandmarks);
+      }
+      
+      ctx.restore();
+    }
+    
+    function detectSitUp(landmarks) {
+      if (!alarmActive) return;
+      
+      // Get relevant landmarks
+      const leftShoulder = landmarks[11];
+      const rightShoulder = landmarks[12];
+      const leftHip = landmarks[23];
+      const rightHip = landmarks[24];
+      const leftKnee = landmarks[25];
+      const rightKnee = landmarks[26];
+      
+      // Check visibility
+      if (!leftShoulder || !leftHip || !leftKnee || 
+          leftShoulder.visibility < 0.5 || leftHip.visibility < 0.5 || leftKnee.visibility < 0.5) {
+        return;
+      }
+      
+      // Calculate angle between shoulder-hip and hip-knee
+      const shoulder = {x: (leftShoulder.x + rightShoulder.x) / 2, y: (leftShoulder.y + rightShoulder.y) / 2};
+      const hip = {x: (leftHip.x + rightHip.x) / 2, y: (leftHip.y + rightHip.y) / 2};
+      const knee = {x: (leftKnee.x + rightKnee.x) / 2, y: (leftKnee.y + rightKnee.y) / 2};
+      
+      const angle = calculateAngle(shoulder, hip, knee);
+      
+      // Sit-up detection logic
+      // When lying down, angle is ~180 degrees (straight body)
+      // When sitting up, angle decreases to ~90 degrees or less
+      
+      frameCount++;
+      
+      if (frameCount % 3 !== 0) return; // Process every 3rd frame
+      
+      // Threshold for detecting sit-up motion
+      if (angle < 120 && !inSitUp) {
+        // Starting to go up
+        inSitUp = true;
+        lastAngle = angle;
+      } else if (angle > 150 && inSitUp && lastAngle < 120) {
+        // Completed a sit-up (came back down with angle returning to straight)
+        if (!sitUpComplete) {
+          sitUpCount++;
+          sitUpComplete = true;
+          updateCount();
+          
+          if (sitUpCount >= 10) {
+            alarmSolved();
+          }
+        }
+      } else if (angle > 160) {
+        // Reset for next sit-up
+        sitUpComplete = false;
+      }
+      
+      if (angle > 120) {
+        lastAngle = angle;
+      }
+    }
+    
+    function calculateAngle(a, b, c) {
+      const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+      let angle = Math.abs(radians * 180.0 / Math.PI);
+      if (angle > 180.0) angle = 360.0 - angle;
+      return angle;
+    }
+    
+    function updateCount() {
+      countEl.textContent = sitUpCount;
+      progressEl.style.width = `${(sitUpCount / 10) * 100}%`;
+      
+      if (sitUpCount < 10) {
+        messageEl.textContent = `Do ${10 - sitUpCount} more sit-ups!`;
+        messageEl.className = 'message alarm';
+      }
+    }
+    
+    function alarmSolved() {
+      stopAlarm();
+      messageEl.textContent = '🎉 Congratulations! Alarm dismissed!';
+      messageEl.className = 'message success';
+      
+      if (camera) {
+        camera.stop();
+        camera = null;
+      }
+      
+      videoContainer.classList.add('hidden');
+      stopBtn.classList.add('hidden');
+    }
+    
+    async function startAlarm() {
+      alarmActive = true;
+      sitUpCount = 0;
+      frameCount = 0;
+      inSitUp = false;
+      sitUpComplete = false;
+      lastAngle = null;
+      
+      messageEl.textContent = '🔔 ALARM! Do 10 sit-ups now!';
+      messageEl.className = 'message alarm';
+      
+      videoContainer.classList.remove('hidden');
+      startBtn.classList.add('hidden');
+      stopBtn.classList.remove('hidden');
+      resetBtn.classList.remove('hidden');
+      
+      // Initialize pose detection
+      initPose();
+      
+      // Start camera
+      camera = new Camera(video, {
+        onFrame: async () => {
+          if (pose) {
+            await pose.send({image: video});
+          }
+        },
+        width: 640,
+        height: 480
+      });
+      
+      camera.start();
+      
+      // Start alarm sound
+      playAlarm();
+    }
+    
+    function stopAlarmHandler() {
+      stopAlarm();
+      messageEl.textContent = 'Alarm stopped. Click "Start Alarm" to try again.';
+      messageEl.className = 'message waiting';
+      
+      if (camera) {
+        camera.stop();
+        camera = null;
+      }
+      
+      videoContainer.classList.add('hidden');
+      stopBtn.classList.add('hidden');
+      startBtn.classList.remove('hidden');
+    }
+    
+    function resetHandler() {
+      sitUpCount = 0;
+      countEl.textContent = '0';
+      progressEl.style.width = '0%';
+      messageEl.textContent = 'Click "Start Alarm" to begin';
+      messageEl.className = 'message waiting';
+      
+      if (camera) {
+        camera.stop();
+        camera = null;
+      }
+      
+      videoContainer.classList.add('hidden');
+      stopBtn.classList.add('hidden');
+      resetBtn.classList.add('hidden');
+      startBtn.classList.remove('hidden');
+    }
+    
+    // For testing: immediately start alarm
+    startBtn.addEventListener('click', startAlarm);
+    stopBtn.addEventListener('click', stopAlarmHandler);
+    resetBtn.addEventListener('click', resetHandler);
+    
+    // Demo button for testing
+    const demoBtn = document.createElement('button');
+    demoBtn.textContent = '🔔 Test Alarm Now';
+    demoBtn.className = 'btn-danger';
+    demoBtn.style.marginTop = '20px';
+    demoBtn.onclick = startAlarm;
+    document.querySelector('.controls').appendChild(demoBtn);
+  </script>
+</body>
+</html>
